@@ -1,0 +1,52 @@
+Change datadir in Postgres Linux
+=====================================================
+Step 1: Check the current/esisting location of postgreSQL Data Directory
+-------------------------------------------------------------
+#sudo -u postgres psql
+postgres# show data_directory;
+
+Existing datadir location : /var/lib/pgsql/14/data
+
+New datadir location : /postgres/data
+
+Step 2: Shutdown Postgres Service
+-----------------------------------
+sudo systemctl status postgresql-14 
+sudo systemctl stop postgresql-14
+sudo systemctl status postgresql-14
+
+Step 3: Copy/Move data from current data directory to new location
+-------------------------------------------------------------------
+#mkdir -p /postgres/data
+#chown postgres:postgres /postgres
+#chown postgres:postgres /postgres/data
+$chmod -R 750 /postgres/data
+
+
+sudo -i -u postgres
+-bash-4.2$ cd /var/lib/pgsql/14/data
+-bash-4.2$ cp -r * /postgres/data
+-bash-4.2$ cd /postgres/data
+-bash-4.2$ ls -lrt
+
+
+Step 4: Update New Data Dir location in config file
+-------------------------------------------------------------------
+cp  /var/lib/pgsql/14/data/postgresql.conf /var/lib/pgsql/14/data/postgresql.conf_original
+sudo vim /var/lib/pgsql/14/data/postgresql.conf
+data_directory = '/postgres/data/' [uncomment and change the directory]
+
+Step 5: Restarting Postgres
+-------------------------------------------------------------------
+sudo systemctl start postgresql-14
+sudo systemctl status postgresql-14
+tail -10f /var/log/messages
+
+Step 6: Verify new location
+-------------------------------------------------------------------
+sudo -u postgres psql
+postgres=# SHOW data_directory;
+
+ data_directory
+----------------
+ /postgres/data

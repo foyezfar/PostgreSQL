@@ -1,0 +1,66 @@
+
+Introduction to PostgreSQL tablespace
+============================================================
+No Need to do this (just for learning) [
+create a new instance or initialize existing instance:
+	mkdir -p /postgres/data/instance1
+	pg_ctl -D /postgres/data/instance1 initdb
+	or
+	pg_ctl -D data initdb
+	ls -lF data
+
+	pg_ctl -D data start
+]
+
+A tablespace is a location on the disk where PostgreSQL stores data files containing database objects e.g., indexes, and tables.
+
+PostgreSQL uses a tablespace to map a logical name to a physical location on disk.
+
+PostgreSQL comes with two default tablespaces:
+
+pg_defaulttablespace stores user data.
+pg_globaltablespace stores global data.
+
+
+Creating a new tablespace:
+--------------------------------------------------------
+[foyez@localhost ~]$ sudo -i -u postgres
+-bash-4.2$ mkdir -p /postgres/data/tbs2
+-bash-4.2$ psql
+postgres=# create tablespace tbs2 location '/postgres/data/tbs2';
+postgres=# \db+
+postgres=# \q
+-bash-4.2$  cd /var/lib/pgsql/14/data/
+-bash-4.2$ ls -lrt
+-bash-4.2$ cd pg_tblspc
+-bash-4.2$ ls -lrt
+
+postgres=# create database db2 tablespace tbs2;
+postgres=# \c db2;
+You are now connected to database "db2" as user "postgres".
+
+
+Move objects from one tablespace to another:
+	alter table tab1 set tablespace pg_default;
+	alter table all in tablespace tbs1 set tablespace pg_default;
+
+
+
+postgres=# show default_tablespace;
+postgres=# set default_tablespace=tbs2 ;
+postgres=# show default_tablespace;
+ default_tablespace
+--------------------
+ tbs2
+(1 row)
+
+pg_basebackup --format=p --tablespace-mapping=/tmp/space2=/tmp/space2backup -D plainb;
+
+
+
+
+
+
+
+
+

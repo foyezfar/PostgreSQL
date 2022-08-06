@@ -1,0 +1,242 @@
+
+What should we do :
+=======================================================
+	CREATE ROLE developer WITH
+	LOGIN
+	PASSWORD 'developer'
+	VALID UNTIL '2022-12-31';
+
+	alter role developer CONNECTION LIMIT 10;
+	alter role developer WITH PASSWORD 'new_password';
+	ALTER ROLE developer VALID UNTIL 'May 4 12:00:00 2022 +6';
+
+Make a password valid forever:
+	ALTER ROLE developer VALID UNTIL 'infinity';
+
+GRANT ALL PRIVILEGES ON DATABASE <db_name> TO <user_name>;
+
+# REVOKE ALL ON DATABASE example_database FROM example_user;
+
+GRANT CONNECT ON DATABASE sales_pharma TO sales_pharma;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO sales_pharma;
+
+# ALTER DEFAULT PRIVILEGES IN SCHEMA public ;
+
+
+# GRANT ALL PRIVILEGES ON DATABASE pacs TO pacs;
+
+
+
+ALTER ROLE role_name [WITH] option;
+#ALTER ROLE pacs WITH Login;
+
+
+
+
+
+
+
+
+
+
+
+PostgreSQL CREATE ROLE statement:
+------------------------------------------------------------------------
+To create a new role, you use the CREATE ROLE statement as follows:
+CREATE ROLE role_name;
+
+To get all roles in the current PostgreSQL database server, you can query them from the pg_roles system catalog as follows:
+
+SELECT rolname FROM pg_roles;
+
+Role attributes
+-----------------------------------------------------------------------------
+The attributes of a role define privileges for that role including login, superuser, database creation, role creation, password, etc:
+
+CREATE ROLE name WITH option;
+In this syntax, the WITH keyword is optional. And the option can be one or more attributes including SUPER, CREATEDB, CREATEROLE, etc.
+
+1) Create login roles 
+For example, the following statement creates a role called alice that has the login privilege and an initial password:
+CREATE ROLE alice 
+LOGIN 
+PASSWORD 'securePass1';
+
+
+Now, you can use the role alice to log in to the PostgreSQL database server using the psql client tool:
+
+psql -U alice -W postgres
+
+
+2) Create superuser roles 
+
+The following statement creates a role called john that has the superuser attribute.
+
+CREATE ROLE john 
+SUPERUSER 
+LOGIN 
+PASSWORD 'securePass1';
+
+The superuser can override all access restrictions within the database therefore you should create this role only when needed.
+
+Notice that you must be a superuser in order to create another superuser role.
+
+3) Create roles that can create databases
+
+CREATE ROLE dba 
+CREATEDB 
+LOGIN 
+PASSWORD 'Abcd1234';
+
+4) Create roles with validity period
+
+CREATE ROLE foyez WITH
+LOGIN
+PASSWORD 'foyez'
+VALID UNTIL '2022-12-31';
+
+5) Create roles with connection limit
+
+CREATE ROLE api
+LOGIN
+PASSWORD 'securePass1'
+CONNECTION LIMIT 1000;
+
+
+
+PostgreSQL GRANT
+==============================================
+GRANT privilege_list | ALL 
+ON  table_name
+TO  role_name;
+
+In this syntax:
+First, specify the privilege_list that can be SELECT, INSERT, UPDATE, DELETE, TRUNCATE, etc. You use the ALL option to grant all privileges on a table to the role.
+Second, specify the name of the table after the ON keyword.
+Third, specify the name of the role to which you want to grant privileges.
+
+
+
+To grant the SELECT privilege on the candidates table to the role joe, you execute the following GRANT statement in the postgres‘ session:
+GRANT SELECT 
+ON candidates 
+TO joe;
+
+Grant all privileges on a table to a role:
+The following statement grants all privileges on the candidates table to the role joe:
+
+GRANT ALL
+ON candidates
+TO joe;
+
+
+
+Grant all privileges on all tables in a schema to a role:
+
+The following statement grants all privileges on all tables in the public schema of the dvdrental sample database to the role joe:
+
+GRANT ALL
+ON ALL TABLES
+IN SCHEMA "public"
+TO joe;
+
+Grant SELECT on all tables
+Sometimes, you want to create a readonly role that can only select data from all tables in a specified schema.
+
+In order to do that, you can grant SELECT privilege on all tables in the public schema like this:
+
+GRANT SELECT
+ON ALL TABLES
+IN SCHEMA "public"
+TO reader;
+
+
+
+Introduction to the PostgreSQL REVOKE statement :
+
+REVOKE privilege | ALL
+ON TABLE table_name |  ALL TABLES IN SCHEMA schema_name
+FROM role_name;
+
+In this syntax:
+First, specify the one or more privileges that you want to revoke. You use the ALL option to revoke all privileges.
+Second, specify the name of the table after the ON keyword. You use the ALL TABLES to revoke specified privileges from all tables in a schema.
+Third, specify the name of the role from which you want to revoke privileges.
+
+
+Revoke privileges from a role
+REVOKE SELECT
+ON actor
+FROM jim;
+
+
+To revoke all privileges on the film table from the role jim, you use REVOKE statement with the ALL option like this:
+REVOKE ALL
+ON film
+FROM jim;
+
+
+
+
+
+Introduction to PostgreSQL group roles
+====================================================================
+To create a group role, you use the CREATE ROLE statement as follows:
+
+	CREATE ROLE group_role_name;
+
+For example, the following statement creates a group role sales:
+
+	CREATE ROLE sales;
+
+To add a role to a group role, you use the following form of the GRANT statement:
+
+	GRANT group_role to user_role;
+
+For example, the following statement adds the role alice to the group role sales:
+
+	GRANT sales TO alice;
+
+To remove a user role from a group role, you use REVOKE statement:
+
+	REVOKE group_role FROM user_role;
+
+For example, the following statement uses the REVOKE statement to remove the role alice from the group role sales:
+
+	REVOKE sales FROM alice;
+
+
+
+
+Using the PostgreSQL ALTER ROLE to modify attributes of roles
+To change attributes of a role, you use the following form of ALTER ROLE statement:
+
+	ALTER ROLE role_name [WITH] option;
+
+The option can be:
+
+SUPERUSER | NOSUPERUSER – determine if the role is a superuser or not.
+CREATEDB | NOCREATEDB– allow the role to create new databases.
+CREATEROLE | NOCREATEROLE – allow the role to create or change roles.
+INHERIT | NOINHERIT – determine if the role to inherit privileges of roles of which it is a member.
+LOGIN | NOLOGIN – allow the role to log in.
+REPLICATION | NOREPLICATION – determine if the role is a replication roles.
+BYPASSRLS | NOBYPASSRLS – determine if the role to by pass a row-level security (RLS) policy.
+CONNECTION LIMIT limit – specify the number of concurrent connection a role can made, -1 means unlimited.
+PASSWORD 'password' | PASSWORD NULL – change the role’s password.
+VALID UNTIL 'timestamp' – set the date and time after which the role’s password is no long valid.
+The following rules are applied:
+
+Superusers can change any of those attributes for any role.
+Roles that have the CREATEROLE attribute can change any of these attributes for only non-superusers and no-replication roles.
+Ordinal roles can only change their passwords.
+
+
+
+
+
+
+
+
+References : https://gist.github.com/apolloclark/ea5466d5929e63043dcf

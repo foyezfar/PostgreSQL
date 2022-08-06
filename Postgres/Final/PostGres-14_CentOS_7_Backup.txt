@@ -1,0 +1,212 @@
+
+============================= PostGres-14 Installation on CentOS 7  =====================
+
+>>>>> For CentOS 7
+
+Step 1:
+# Install the repository RPM:
+# Add PostgreSQL repository
+[foyez@localhost ~]$ sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+>>>>>>>>> List available repositories on the system after adding it:
+
+	$sudo yum repolist -y
+	
+Step 2: Install PostgreSQL 14 CentOS 7 | RHEL 7
+
+sudo yum -y update 
+sudo systemctl reboot
+
+#Wait for the system to come online then login and install PostgreSQL server and client packages
+# Install PostgreSQL:
+[foyez@localhost ~]$ sudo yum install -y postgresql14-server postgresql14
+
+#Check packages version upon successful installation of PostgreSQL 14 CentOS 7 | RHEL 7
+
+[foyez@localhost ~]$ rpm -qi postgresql14-server postgresql14
+
+Step 3: Initialize PostgreSQL 14 CentOS 7 | RHEL 7
+#Initialize the PostgreSQL 14 server before use by running the command:
+[foyez@localhost ~]$ sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
+
+>>>> The database main configuration file is written to: /var/lib/pgsql/14/data/postgresql.conf   
+[foyez@localhost ~]$ sudo cat  /var/lib/pgsql/14/data/postgresql.conf
+
+#Start and enable database service
+[foyez@localhost ~]$ sudo systemctl enable --now postgresql-14
+
+#Service should be in running state after starting it
+[foyez@localhost ~]$ systemctl status postgresql-14
+
+#If you have a running Firewall service and remote clients should connect to your database server, allow PostgreSQL service.
+
+[foyez@localhost ~]$ sudo firewall-cmd --add-service=postgresql --permanent
+[foyez@localhost ~]$ sudo firewall-cmd --reload
+
+Step 4: Set strong password for Postgres user and login
+
+#Switch to postgres user account.
+[foyez@localhost ~]$ sudo su - postgres
+#Access psql shell:
+-bash-4.2$ psql  OR  -bash-4.2$ psql postgres
+
+postgres=# alter user postgres with password '123456';
+
+#Logout from the shell
+postgres=# \q
+-bash-4.2$ logout
+
+[foyez@localhost ~]$ sudo systemctl restart postgresql-14
+
+
+postgres=# SHOW data_directory;
+output-> /var/lib/pgsql/14/data
+
+>>>>>>>>>>  Enable remote access (Optional)
+
+Step 5: Enable remote access (Optional)
+#Edit the file /var/lib/pgsql/14/data/postgresql.conf and set Listen address to your server IP address or “*” for all interfaces.
+
+listen_addresses = '192.168.0.57'  or listen_addresses = '*'   
+			|
+		Server Ip Address
+
+
+>>> Also set PostgreSQL to accept remote connections
+
+$ sudo vim /var/lib/pgsql/14/data/pg_hba.conf
+
+# Accept from anywhere
+host 	all 	all	 0.0.0.0/0 		md5
+
+# Accept from trusted subnet
+host 	all 	all 	192.168.18.0/24		 md5
+
+or ----->>>
+
+# "local" is for Unix domain socket connections only
+local   all             postgres                                peer   ( or trust )
+# IPv4 local connections:
+host	all		all		192.168.0.58/24		md5   ( Must define) [client ip]
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+
+
+
+
+>>>>>>>>>>>>  Restart database service after committing the change.
+
+[foyez@localhost ~]$ sudo systemctl restart postgresql-14
+
+>>> Connecting to remote database:
+
+
+[foyez@localhost ~]$ psql -U postgres -h 192.168.0.57
+
+or 
+
+[foyez@localhost ~]$ psql -U postgres -h 192.168.0.57 -d postgres  [-u=user,-d=db_name,-u=user,-h=host]
+
+
+
+
+Connection String
+---------------------
+[foyez@localhost ~]$ sudo su - postgres
+-bash-4.2$ psql
+
+
+==========>>> Create Another User ... ===========>>>
+
+postgres=# \conninfo
+You are connected to database "postgres" as user "postgres" via socket in "/var/run/postgresql" at port "5432".
+postgres=# create user foyez superuser ;
+CREATE ROLE
+postgres=# alter user foyez with password 'foyez';
+ALTER ROLE
+
+postgres=# \du
+                                   List of roles
+ Role name |                         Attributes                         | Member
+ of 
+-----------+------------------------------------------------------------+-------
+----
+ foyez    | Superuser                                                  | {}
+ postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+postgres=# \c postgres foyez;                   
+Password for user foyez: 
+You are now connected to database "postgres" as user "foyez".
+postgres=# \conninfo
+You are connected to database "postgres" as user "foyez" via socket in "/var/run/postgresql" at port "5432".
+
+
+[foyez@localhost ~]$ psql -d postgres -U foyez
+postgres=# \conninfo
+You are connected to database "postgres" as user "foyez" via socket in "/var/run/postgresql" at port "5432".
+
+
+
+
+
+
+
+
+Postgres Auto Backup
+================================================================
+[root@localhost /]# mkdir -p /postgresdb/postgres_backups
+[root@localhost /]# vim daily_backups_pg.sh
+[root@localhost /]# chmod 755 daily_backups_pg.sh
+
+#!/bin/bash
+#
+# Backup a Postgresql database into a daily file.
+#
+
+BACKUP_DIR=/postgresdb/postgres_backups
+DAYS_TO_KEEP=15
+FILE_SUFFIX=_pg_backup.sql
+USER=pacs
+
+
+# Remove old backups
+find $BACKUP_DIR -maxdepth 1 -mtime +$DAYS_TO_KEEP -name "*${FILE_SUFFIX}.gz" -exec rm -rf '{}' ';'
+
+
+######### Database pacs Backup #################
+DATABASE=pacs
+FILE=`date +"%d-%m-%Y-%H%M"`_${DATABASE}${FILE_SUFFIX}
+OUTPUT_FILE=${BACKUP_DIR}/${FILE}
+# do the database backup (dump)
+# use this command for a database server on localhost. add other options if need be.
+PGPASSWORD="pacs" pg_dump -U ${USER} ${DATABASE} -F p -f ${OUTPUT_FILE}
+# gzip the postgres database dump file
+gzip $OUTPUT_FILE
+
+# show the user the result
+echo "${OUTPUT_FILE}.gz was created:"
+ls -l ${OUTPUT_FILE}.gz
+
+
+[root@localhost ~]$ crontab -e
+30 13 * * * /postgres_db/daily_backups_pg.sh'
+
+
+
+
+
+
+
+===============>>> References ===========>>
+#https://computingforgeeks.com/how-to-install-postgresql-14-centos-rhel-7/
+# https://computingforgeeks.com/how-to-install-pgadmin-on-centos-fedora/
+# https://www.tecmint.com/install-pgadmin4-in-centos-7/
+# https://www.youtube.com/watch?v=aRfEOMRcqH0
+# https://www.youtube.com/watch?v=G64zExkuXsU
+# https://learnstowin.com/pgadmin4
+
+
+
+
+
+

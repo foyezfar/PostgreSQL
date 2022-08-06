@@ -1,0 +1,363 @@
+
+============================= PostGres-14 Installation on CentOS 7  =====================
+
+
+>>>>> For CentOS 7
+
+Step 1:
+# Install the repository RPM:
+# Add PostgreSQL repository
+[foyez@localhost ~]$ sudo yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+
+>>>>>>>>> List available repositories on the system after adding it:
+
+	$sudo yum repolist -y
+	
+Step 2: Install PostgreSQL 14 CentOS 7 | RHEL 7
+
+sudo yum -y update 
+sudo systemctl reboot
+
+#Wait for the system to come online then login and install PostgreSQL server and client packages
+# Install PostgreSQL:
+[foyez@localhost ~]$ sudo yum install -y postgresql14-server postgresql14
+
+#Check packages version upon successful installation of PostgreSQL 14 CentOS 7 | RHEL 7
+
+[foyez@localhost ~]$ rpm -qi postgresql14-server postgresql14
+
+Step 3: Initialize PostgreSQL 14 CentOS 7 | RHEL 7
+#Initialize the PostgreSQL 14 server before use by running the command:
+[foyez@localhost ~]$ sudo /usr/pgsql-14/bin/postgresql-14-setup initdb
+
+>>>> The database main configuration file is written to: /var/lib/pgsql/14/data/postgresql.conf   
+[foyez@localhost ~]$ sudo cat  /var/lib/pgsql/14/data/postgresql.conf
+
+#Start and enable database service
+[foyez@localhost ~]$ sudo systemctl enable --now postgresql-14
+
+#Service should be in running state after starting it
+[foyez@localhost ~]$ systemctl status postgresql-14
+
+#If you have a running Firewall service and remote clients should connect to your database server, allow PostgreSQL service.
+
+[foyez@localhost ~]$ sudo firewall-cmd --add-service=postgresql --permanent
+[foyez@localhost ~]$ sudo firewall-cmd --reload
+
+Step 4: Set strong password for Postgres user and login
+
+#Switch to postgres user account.
+[foyez@localhost ~]$ sudo su - postgres
+#Access psql shell:
+-bash-4.2$ psql  / -bash-4.2$ psql postgres
+
+postgres=# alter user postgres with password '123456';
+
+#Logout from the shell
+postgres=# \q
+-bash-4.2$ logout
+
+[foyez@localhost ~]$ sudo systemctl restart postgresql-14
+
+
+postgres=# SHOW data_directory;
+output-> /var/lib/pgsql/14/data
+
+>>>>>>>>>>  Enable remote access (Optional)
+
+Step 5: Enable remote access (Optional)
+#Edit the file /var/lib/pgsql/14/data/postgresql.conf and set Listen address to your server IP address or “*” for all interfaces.
+
+listen_addresses = '192.168.0.57'  or listen_addresses = '*'   
+			|
+		Server Ip Address
+
+
+>>> Also set PostgreSQL to accept remote connections
+
+$ sudo vim /var/lib/pgsql/14/data/pg_hba.conf
+
+# Accept from anywhere
+host 	all 	all	 0.0.0.0/0 		md5
+
+# Accept from trusted subnet
+host 	all 	all 	192.168.18.0/24		 md5
+
+or ----->>>
+
+# "local" is for Unix domain socket connections only
+local   all             postgres                                peer   ( or trust )
+# IPv4 local connections:
+host	all		all		192.168.0.58/24		md5   ( Must define) [client ip]
+# IPv6 local connections:
+host    all             all             ::1/128                 ident
+
+
+
+
+>>>>>>>>>>>>  Restart database service after committing the change.
+
+[foyez@localhost ~]$ sudo systemctl restart postgresql-14
+
+>>> Connecting to remote database:
+
+
+[foyez@localhost ~]$ psql -U postgres -h 192.168.0.57
+
+or 
+
+[foyez@localhost ~]$ psql -U postgres -h 192.168.0.57 -d postgres  [-u=user,-d=db_name,-u=user,-h=host]
+
+
+
+
+Connection String
+---------------------
+[foyez@localhost ~]$ sudo su - postgres
+-bash-4.2$ psql
+
+
+==========>>> Create Another User ... ===========>>>
+
+postgres=# \conninfo
+You are connected to database "postgres" as user "postgres" via socket in "/var/run/postgresql" at port "5432".
+postgres=# create user foyez superuser ;
+CREATE ROLE
+postgres=# alter user foyez with password 'foyez';
+ALTER ROLE
+
+postgres=# \du
+                                   List of roles
+ Role name |                         Attributes                         | Member
+ of 
+-----------+------------------------------------------------------------+-------
+----
+ foyez    | Superuser                                                  | {}
+ postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+
+postgres=# \c postgres foyez;                   
+Password for user foyez: 
+You are now connected to database "postgres" as user "foyez".
+postgres=# \conninfo
+You are connected to database "postgres" as user "foyez" via socket in "/var/run/postgresql" at port "5432".
+
+
+[foyez@localhost ~]$ psql -d postgres -U foyez
+postgres=# \conninfo
+You are connected to database "postgres" as user "foyez" via socket in "/var/run/postgresql" at port "5432".
+
+>>>>>>>>>>>>>>>>>>>>>>>>> Reference >>>>>>>>>>>>>>>>
+References : https://computingforgeeks.com/how-to-install-postgresql-14-centos-rhel-7/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===========>>>>> Install pgAdmin 4 on CentOS 7 ===========================>>>>>>>>>>>>
+
+Step 1: Add pgAdmin 4 repository
+
+[foyez@localhost ~]$ sudo yum -y update
+[foyez@localhost ~]$ sudo yum install https://ftp.postgresql.org/pub/pgadmin/pgadmin4/yum/pgadmin4-redhat-repo-2-1.noarch.rpm
+
+
+You can check the contents of the repository file created using the following command:
+
+[foyez@localhost ~] $ cat /etc/yum.repos.d/pgadmin4.repo
+
+[foyez@localhost ~] $ sudo yum install -y epel-release
+[foyez@localhost ~] $ sudo yum install -y python3-pip
+[foyez@localhost ~] $ sudo yum install -y httpd
+
+>>>>>>> Then install the pgAdmin package:
+
+[foyez@localhost ~]$ sudo yum install pgadmin4-web
+[foyez@localhost ~]$ sudo yum install pgadmin4
+
+
+
+
+>> Start and enable httpd service to start on boot
+
+[foyez@localhost ~]$ sudo systemctl start httpd && sudo systemctl enable httpd
+
+>> You can confirm service status by running:
+
+[foyez@localhost ~]$ sudo systemctl status httpd
+
+>>>>>>>>> Rename pgAdmin Apache configuration sample
+There are few minor configuration changes that need to be done to have pgAdmin4 running. 
+First we will rename the sample conf file from pgadmin4.conf.sample to pgadmin4.conf:
+
+[foyez@localhost ~]$ cd  /etc/httpd/conf.d
+[foyez@localhost conf.d]$ ls -l
+[foyez@localhost conf.d]$ sudo cp /etc/httpd/conf.d/pgadmin4.conf /etc/httpd/conf.d/pgadmin4.conf.sample
+Or
+[foyez@localhost ~]$ sudo mv /etc/httpd/conf.d/pgadmin4.conf /etc/httpd/conf.d/pgadmin4.conf.sample
+
+linux command explain:
+copy-> mv /home/jack/testfile /home/jack/testfile2 [Current:destination]
+rename-> mv repo old [oldname newname]
+copy-> cp old new
+
+mv is a Unix command that moves one or more files or directories from one place to another. If both filenames are on the same filesystem, 
+this results in a simple file rename; otherwise the file content is copied to the new location and the old file is removed.
+
+
+>>>>>>>>   Edit the file to add VirtualHost section, it should look like below:
+
+[root@localhost ~]# find / -name pgadmin4.conf
+
+[foyez@localhost ~]$sudo vi /etc/httpd/conf.d/pgadmin4.conf  [This will tell where config_distro.py located]
+
+<VirtualHost *:80>
+ServerName pgadmin.example.com
+LoadModule wsgi_module modules/mod_wsgi.so
+WSGIDaemonProcess pgadmin processes=1 threads=25
+WSGIScriptAlias /pgadmin4 /usr/pgadmin4/web/config_distro.py
+
+<Directory /usr/lib/python2.7/site-packages/pgadmin4-web/>    
+	WSGIProcessGroup pgadmin
+	WSGIApplicationGroup %{GLOBAL}
+	<IfModule mod_authz_core.c>
+		# Apache 2.4
+		Require all granted
+	</IfModule>
+	<IfModule !mod_authz_core.c>
+		# Apache 2.2
+		Order Deny,Allow
+		Deny from All
+		Allow from 127.0.0.1
+		Allow from ::1
+	</IfModule>
+</Directory>
+</VirtualHost>
+
+-------------------
+
+
+
+>>>>>>>>>> Confirm configuration syntax to prevent any errors and restart httpd service.
+
+[foyez@localhost ~]$ sudo httpd -t
+Syntax OK
+[foyez@localhost ~]$ sudo systemctl restart httpd
+
+
+>>>>>>>>>>>> Create pgAdmin data directories:
+
+[foyez@localhost ~]$ sudo mkdir -p /var/lib/pgadmin4/ /var/log/pgadmin4/
+
+
+>>>>>>>>>>> Edit config_local.py and add the following settings. In most cases, the default file locations should be appropriate:
+
+N.B:  file location can be python3.6/python2.7 or any others but latest version ...python3.6
+
+[foyez@localhost ~]$ sudo find / -name config_distro.py
+/usr/pgadmin4/web/config_distro.py
+
+[foyez@localhost ~]$ sudo vi /usr/pgadmin4/web/config_distro.py
+----->> add 
+LOG_FILE = '/var/log/pgadmin4/pgadmin4.log'
+SQLITE_PATH = '/var/lib/pgadmin4/pgadmin4.db'
+SESSION_DB_PATH = '/var/lib/pgadmin4/sessions'
+STORAGE_DIR = '/var/lib/pgadmin4/storage'
+
+-------------------
+
+>>>>>>>>>>>>>>  Run the following command to create the configuration database:
+
+
+
+
+[foyez@localhost ~]$ sudo /usr/pgadmin4/bin/setup-web.sh
+
+>>>>>>>>>>>>> This will ask you to Enter the email address and the password to use for the initial 
+
+pgAdmin user account.
+
+Email address: admin@example.com 
+Password: <INPUT PASSWORD>
+Retype password:<Confirm PASSWORD>
+pgAdmin 4 - Application Initialisation
+======================================
+
+>>>>>>>>  Set permissions for pgAdmin directories to apache user
+
+[foyez@localhost ~]$ sudo chown -R apache:apache /var/lib/pgadmin4 /var/log/pgadmin4
+
+>>>>>>>>>>>> Configure SELinux
+
+If you have SELinux running in enforcing mode, create and apply a policy to allow Apache user access pgAdmin directories.
+
+[foyez@localhost ~]$ sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/lib/pgadmin4(/.*)?"
+[foyez@localhost ~]$ sudo semanage fcontext -a -t httpd_sys_rw_content_t "/var/log/pgadmin4(/.*)?"
+[foyez@localhost ~]$ sudo restorecon -R /var/lib/pgadmin4/
+[foyez@localhost ~]$ sudo restorecon -R /var/log/pgadmin4/
+
+>>>>>>>>>>>>> Access pgAdmin 4 Web Interface
+
+if you have an active firewall service, allow http port
+
+[foyez@localhost ~]$ sudo firewall-cmd --permanent --add-service=http
+[foyez@localhost ~]$ sudo firewall-cmd --reload
+
+
+
+
+>>>>>>>>>>>   Restart httpd service.
+
+[foyez@localhost ~]$ sudo systemctl restart httpd
+
+
+
+
+
+>>>>>>>>>>>>  Open http://192.168.0.101/pgadmin4 to log in to the pgAdmin with 
+username and password
+
+
+
+>>>>>>>>>>>   If you receive 403 error while accessing PgAdmin4 interface, you need to set the correct SELinux context on the following files.
+
+$ chcon -t httpd_sys_rw_content_t /var/log/pgadmin4 -R
+$ chcon -t httpd_sys_rw_content_t /var/lib/pgadmin4 -R
+
+
+Connecting to the instance from remote host
+Use this command to test that you can connect:
+
+psql 'postgres://<username>:<password>@<host>:<port>/<db>?sslmode=disable'
+
+# like
+psql 'postgres://root:passwordhere@192.160.1.20:5432/postgres?sslmode=disable'
+
+
+SELECT pg_size_pretty( pg_database_size('test_thp') );
+
+
+===============>>> References ===========>>
+
+# https://computingforgeeks.com/how-to-install-pgadmin-on-centos-fedora/
+# https://www.tecmint.com/install-pgadmin4-in-centos-7/
+# https://www.youtube.com/watch?v=aRfEOMRcqH0
+# https://www.youtube.com/watch?v=G64zExkuXsU
+# https://learnstowin.com/pgadmin4
+
+
+
+
+
+

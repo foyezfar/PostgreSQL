@@ -1,0 +1,70 @@
+Windows
+==============================================================
+Backup:
+C:\Users\Foyez> D:\postgres14.2\bin\pg_dump -h localhost -p 5433 -U postgres -F c -b -v -f D:\PostgresBackup\postgres_foyez_28_02_2022_17_15.backup testdb
+
+
+Restore:
+C:\Users\Foyez> D:\postgres14.2\bin\pg_restore -h localhost -p 5433 -U postgres -d testdb -v D:\PostgresBackup\postgres_foyez_28_02_2022_17_15.backup
+
+C:\Program Files\PostgreSQL\14\bin>psql -h 192.168.0.95 -p 5432 -U thp_inv_v1 -d thp_inv_v1 -f  D:\TABLE_output.sql
+
+or
+C:\Program Files\PostgreSQL\14\bin> psql -h 192.168.0.95 -p 5432 -U postgres -d thp_inv_v1 -v D:\ShareFolder\fileorathp2pg\TABLE_output.sql
+
+
+Linux
+=============================================================
+[root@localhost~]# sudo su postgres
+
+Backup:
+bash-4.2$ pg_dump -U pacs pacsdb -F p -f /postgresdb/postgres_backups/test.sql
+
+Restore:
+bash-4.2$ psql -U pacs -d pacsdb < /postgresdb/postgres_backups/06-03-2022-0815_pacs_docker_pg_backup.sql
+
+
+Or
+
+bash-4.2$ pg_restore -U postgres -v -d  test ati_accounts_pro_22_03_2022_18_28.backup
+
+
+Linux Dump All
+==============================================================
+[root@localhost postgres_db]# chown postgres:postgres postgres_backup
+
+Backup:
+bash-4.2$ pg_dumpall -f /var/lib/pgsql/14/data/all.sql   [only .sql support in dump_all]
+
+Restore: (Single DB Restore)
+bash-4.2$ psql -d pacsdb -f /var/lib/pgsql/14/data/all.sql
+
+Restore: (All DB Restore)
+bash-4.2$ psql -f /var/lib/pgsql/14/data/all.sql
+
+
+
+
+Inside Docker:
+===============================================================
+Backup:
+root@5d5571461c6e:~# pg_dump -U pacs pacsdb -F p -f /postgresdb/postgres_backups/test.sql
+
+Restore:
+root@5d5571461c6e:# psql -U pacs -d pacsdb < /postgresdb/postgres_backups/06-03-2022-0815_pacs_docker_pg_backup.sql
+
+
+
+
+
+.gz unzip in linux
+==================================================
+# gzip -d  pacs_docker_pg_backup.sql.gz
+
+
+
+--set ON_ERROR_STOP=on
+
+
+
+
