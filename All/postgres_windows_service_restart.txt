@@ -1,0 +1,10 @@
+$ show data_directory;
+result :
+
+------------------------
+- D:\postgres14.2\data      -
+------------------------
+
+go to the bin directory of postgres in my case it's located "D:\postgres14.2\bin"
+
+D:\postgres14.2\bin>pg_ctl -D "D:\postgres14.2\data" restart

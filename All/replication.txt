@@ -1,0 +1,18 @@
+#Create replication user with the following command.
+psql -c "CREATE USER replication REPLICATION LOGIN CONNECTION LIMIT 1 ENCRYPTED PASSWORD '123456';"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://www.section.io/engineering-education/how-to-replicate-postgresql-database/
+https://www.howtoforge.com/how-to-setup-postgresql-streaming-replication-with-replication-slots-on-debian-10/

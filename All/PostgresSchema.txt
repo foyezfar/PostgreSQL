@@ -1,0 +1,73 @@
+In PostgreSQL, a schema is a namespace that contains named database objects such as tables, views, indexes, data types, functions, stored procedures and operators.
+
+To access an object in a schema, you need to qualify the object by using the following syntax:
+
+schema_name.object_name
+
+
+Building Blocks
+-----------------------
+Postgres Cluster > databases > Schema > Objects
+
+postgres=# select current_schema;
+ current_schema
+----------------
+ public
+(1 row)
+
+postgres=# SHOW search_path;
+   search_path
+-----------------
+ "$user", public
+(1 row)
+
+
+In this output:
+
+The "$user" specifies that the first schema that PostgreSQL will use to search for the object, which has the same name as the current user. For example, if you use the postgres user to login and access the staff table. PostgreSQL will search for the staff table in the postgres schema. If it cannot find any object like that, it continues to look for the object in the public schema.
+The second element refers to the public schema as we have seen before.
+
+To create a new schema, you use the CREATE SCHEMA statement:
+
+postgres=# CREATE SCHEMA myschema;
+
+
+To add the new schema to the search path, you use the following command:
+
+postgres=# SET search_path TO sales, public;
+
+Syntax to Drop Schema :
+To drop a schema if it is empty (all objects in it have been dropped), use the command −
+
+postgres=# DROP SCHEMA myschema;
+To drop a schema including all contained objects, use the command −
+
+postgres=# DROP SCHEMA myschema CASCADE;
+
+
+The following statement returns all schemas from the current database:
+postgres=# SELECT * FROM pg_catalog.pg_namespace ORDER BY nspname;
+
+
+The below command is used to get the usage privilege for the users on the schema:
+
+postgres=# GRANT USAGE ON SCHEMA schema_name TO user_name;  
+
+And to permit the users to create an object in the schema that they do not create, we must grant them the CREATE privilege.
+
+The below command is used to grant the create privilege on the schema:
+
+postgres=# GRANT CREATE ON SCHEMA schema_name TO user_name; 
+ 
+Note: Each user has the USAGE and CREATE privileges on the public schema by default.
+We can revoke that privilege if we do not want to access that with the below command's help.
+
+postgres=# REVOKE CREATE ON SCHEMA public FROM PUBLIC;  
+
+Here, the first public refers to the schema, and the second public refers to every user.
+
+
+
+
+
+

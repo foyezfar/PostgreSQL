@@ -1,0 +1,157 @@
+Roles
+==========================================
+postgres=# create role developer;
+postgres=# create user userA with PASSWORD 'userA';
+
+postgres=# create role userB;   OR      postgres=# create role userB with login;  OR postgres=# create role userB with login password 'userB';
+
+
+postgres=# Grant connect on database test to developer;
+Or
+postgres=# Grant connect on database test to userB;
+
+
+
+postgres=# create database test;
+
+postgres=# revoke all on database test from public;
+
+postgres=# GRANT developer to userA;
+postgres=# GRANT developer to userB;
+
+
+
+postgres=# \du
+                                   List of roles
+ Role name |                         Attributes                         | Member of
+-----------+------------------------------------------------------------+-----------
+ postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+ developer | Cannot login                                               | {}
+ usera     |                                                            | {developer}
+ userb     |                                                            | {developer}
+
+
+Schema level Permission
+=========================================
+postgres=# revoke all on schema public from public;
+
+postgres=# GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA public TO developer;
+OR
+postgres=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO developer;
+
+postgres=# show search_path;
+   search_path
+-----------------
+ "$user", public
+
+
+ 
+postgres=# \l
+                                  List of databases
+   Name    |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges
+-----------+----------+----------+-------------+-------------+-----------------------
+ pacs      | pacs     | UTF8     | en_US.UTF-8 | en_US.UTF-8 |
+
+
+postgres=# \c pacs userA
+You are now connected to database "pacs" as user "userA".
+postgres=# \c pacs foyez
+You are now connected to database "pacs" as user "foyez".
+pacs=#
+
+
+
+
+
+
+Final
+============================
+Grant connect on database test to developer;
+grant usage on schema public to developer;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO developer;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT UPDATE, INSERT, SELECT, DELETE ON TABLES TO developer;
+
+-------------------------------------------------------------------------------
+Steps: Permission denied:
+1. Connect with user who is superuser or user with grantable privileges.
+2. Connect to the database in which table exists.  [Most Important]
+3. Then, run the following command to grant all privileges to user david on table 'students'.
+ 
+
+postgress# create user developer with password 'developer';
+postgress# Grant connect on database ati_erp to developer;
+postgress# \q
+-bash-4.1$ psql ati_erp;
+ati_erp=# \c
+You are now connected to database "ati_erp" as user "postgres".
+ati_erp=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO developer;
+GRANT
+
+
+===================================================
+
+postgres=# \c thp_inv_v1
+You are now connected to database "thp_inv_v1" as user "postgres".
+thp_inv_v1=# GRANT ALL PRIVILEGES ON DATABASE thp_inv_v1 to thp_inv_v1;
+GRANT
+thp_inv_v1=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO thp_inv_v1;
+GRANT
+
+
+
+
+
+
+
+
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA kpi REVOKE EXECUTE ON FUNCTIONS FROM intranet2;
+
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE delete ON  tables FROM usera;
+
+
+select grantee,table_schema,table_name,privilege_type
+            from information_schema.role_table_grants
+           where grantee='testuser_read' 
+           order by table_name,privilege_type;
+
+
+https://tableplus.com/blog/2018/04/postgresql-how-to-grant-access-to-users.html
+
+How to grant access to users in PostgreSQL?
+Here are some common statement to grant access to a PostgreSQL user:
+
+1. Grant CONNECT to the database:
+
+GRANT CONNECT ON DATABASE database_name TO username;
+2. Grant USAGE on schema:
+
+GRANT USAGE ON SCHEMA schema_name TO username;
+3. Grant on all tables for DML statements: SELECT, INSERT, UPDATE, DELETE:
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA schema_name TO username;
+4. Grant all privileges on all tables in the schema:
+
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA schema_name TO username;
+5. Grant all privileges on all sequences in the schema:
+
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA schema_name TO username;
+6. Grant all privileges on the database:
+
+GRANT ALL PRIVILEGES ON DATABASE database_name TO username;
+7. Grant permission to create database:
+
+ALTER USER username CREATEDB;
+8. Make a user superuser:
+
+ALTER USER myuser WITH SUPERUSER;
+9. Remove superuser status:
+
+ALTER USER username WITH NOSUPERUSER;
+Those statements above only affect the current existing tables. To apply to newly created tables, you need to use alter default. For example:
+
+ALTER DEFAULT PRIVILEGES
+FOR USER username
+IN SCHEMA schema_name
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO username;

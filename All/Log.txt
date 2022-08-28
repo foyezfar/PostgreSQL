@@ -1,0 +1,32 @@
+To keep 7 days of logs, one log file per day named postgresql-Mon.log, postgresql-Tue.log, etc, and automatically overwrite last week's log with this week's log.
+
+logging_collector=on
+log_filename = 'postgresql-%a.log'
+log_directory = 'log'
+log_rotation_age = 1d
+log_truncate_on_rotation=on  
+
+
+
+
+
+log_line_prefix = '%t [%p]: user=%u,db=%d,app=%a,client=%h '
+log_filename='postgresql-%Y-%m-%d_%H%M%S.log'
+
+
+
+
+
+
+./pgmetrics_1.9.0_linux_amd64/pgmetrics -f json -U postgres | ./pgdash_1.5.1_linux_amd64/pgdash -a NrxaHk3JH2ztLI06qQlA4o report 192.168.0.101
+
+
+
+
+wget https://github.com/rapidloop/pgmetrics/releases/download/v1.12.0/pgmetrics_1.12.0_linux_amd64.tar.gz
+tar xvf pgmetrics_1.12.0_linux_amd64.tar.gz
+cd pgmetrics_1.12.0_linux_amd64
+./pgmetrics --help
+
+
+./pgmetrics -h 192.168.0.101 -p 5432 -U postgres

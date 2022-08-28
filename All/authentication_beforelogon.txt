@@ -1,0 +1,43 @@
+https://raghavt.blog/after-logonoracle-trigger-in-postgresql-with-extension-login_hook/
+
+
+CREATE OR REPLACE TRIGGER program_restrict
+AFTER LOGON ON DATABASE
+BEGIN
+    FOR x IN (SELECT username, program FROM SYS.v_$session WHERE audsid = USERENV ('sessionid'))
+    LOOP
+    IF LTRIM (RTRIM (x.username)) = 'MIGUSER' AND UPPER(substr(x.program,1,7)) = 'SQLPLUS'
+    THEN
+      raise_application_error(-20999,'Not authorized to use in the Production environment!');
+    END IF;
+    END LOOP;
+END program_restrict;
+
+
+CREATE OR REPLACE TRIGGER trg_login AFTER LOGON ON DATABASE
+DECLARE 
+  vcnt number;
+  p_ip_address VARCHAR2(20) := SYS_CONTEXT('USERENV', 'IP_ADDRESS'); 
+
+BEGIN
+
+ SELECT count(1) into vcnt FROM sc_user WHERE SCHEMA_NAME = USER  and IP_ADDRESS = p_ip_address and ACT_FG=1 
+   and to_number(to_char(sysdate,'HH24.MI')) between start_time and end_time;
+  
+    if vcnt  > 0 then
+   null;
+      ELSE
+     RAISE_APPLICATION_ERROR(-20000, 'You are not authorized to login ' || USER || ' Schema. Please Contact with DB Group !!!');
+    
+   END IF;
+end;
+
+
+
+
+
+
+
+
+https://stackoverflow.com/questions/13172524/passing-user-id-to-postgresql-triggers
+https://www.bluelabellabs.com/blog/how-to-setup-automatic-audit-logging-in-postgres-using-triggers-and-trigger-functions/

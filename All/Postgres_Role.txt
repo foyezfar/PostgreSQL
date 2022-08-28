@@ -1,0 +1,82 @@
+Roles
+==========================================
+create role sales;
+create user userA;
+create role userB with login;
+create database test;
+
+revoke all on database test from public;
+
+GRANT sales to userA;
+GRANT sales to userB;
+
+Grant connect on database test to sales;
+
+postgres=# \du
+                                   List of roles
+ Role name |                         Attributes                         | Member of
+-----------+------------------------------------------------------------+-----------
+ postgres  | Superuser, Create role, Create DB, Replication, Bypass RLS | {}
+ sales     | Cannot login                                               | {}
+ usera     |                                                            | {sales}
+ userb     |                                                            | {sales}
+
+
+Schema level Permission
+=========================================
+revoke all on schema public from public;
+
+GRANT SELECT, UPDATE, INSERT, DELETE ON ALL TABLES IN SCHEMA public TO sales;
+
+postgres=# show search_path;
+   search_path
+-----------------
+ "$user", public
+
+grant usage on schema public to sales;
+
+postgres=# \d
+                  List of relations
+ Schema |         Name         |   Type   |  Owner
+--------+----------------------+----------+----------
+ public | accounts             | table    | postgres
+ public | accounts_user_id_seq | sequence | postgres
+ public | test                 | table    | postgres
+
+postgres=# \l
+                                  List of databases
+   Name    |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges
+-----------+----------+----------+-------------+-------------+-----------------------
+ pacs      | pacs     | UTF8     | en_US.UTF-8 | en_US.UTF-8 |
+
+
+postgres=# \c pacs foyez
+You are now connected to database "pacs" as user "foyez".
+
+
+Final
+============================
+Grant connect on database test to sales;
+grant usage on schema public to sales;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO sales;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT UPDATE, INSERT, SELECT, DELETE ON TABLES TO developer;
+
+-------------------------------------------------------------------------------
+Steps: Permission denied:
+1. Connect with user who is superuser or user with grantable privileges.
+2. Connect to the database in which table exists.  [Most Important]
+3. Then, run the following command to grant all privileges to user david on table ‘students’.
+
+
+postgress# create user developer with password 'developer';
+postgress# Grant connect on database ati_erp to developer;
+postgress# \q
+-bash-4.1$ psql ati_erp;
+ati_erp=# \c
+You are now connected to database "ati_erp" as user "postgres".
+ati_erp=# GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO developer;
+GRANT
+
+
+
+

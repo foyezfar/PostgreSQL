@@ -1,0 +1,18 @@
+[foyez@localhost ~]$ pgrep -u postgres -fa -- -D
+So pgrep will look at processes and will try to grep on it. Here is the options I added to make it look as I wanted:
+-u postgres will only look at processes owned by the user postgres
+-f will look at the pattern in the whole command line, not only the process name
+-a will display the whole command line instead of only the process number
+-- will allow a pattern that begins by - (like our -D)
+
+[foyez@localhost ~]$ pgrep -u postgres -fa -- -D
+1287 /usr/pgsql-14/bin/postmaster -D /var/lib/pgsql/14/data/
+
+
+
+[foyez@localhost ~]$ systemctl list-unit-files | grep postgres
+postgres_exporter.service                     enabled
+postgresql-14.service                         enabled
+
+
+[root@localhost ~]# systemctl status postgresql-14

@@ -1,0 +1,35 @@
+=====================================================================
+							pg_badger
+=====================================================================
+wget https://github.com/darold/pgbadger/archive/refs/tags/v11.8.tar.gz
+tar xzf v11.8.tar.gz
+cd pgbadger-11.8
+sudo yum install perl-devel
+perl Makefile.PL
+make && sudo make install
+
+
+You need to enable other parameters in postgresql.conf to get more information from your log files:
+vim /var/lib/pgsql/12/data/postgresql.conf
+		log_line_prefix = '%t [%p]: user=%u,db=%d,app=%a,client=%h '
+		log_filename='postgresql-%Y-%m-%d_%H%M%S.log'
+        log_checkpoints = on
+        log_connections = on
+        log_disconnections = on
+        log_lock_waits = on
+        log_temp_files = 0
+        log_autovacuum_min_duration = 0
+        log_error_verbosity = default
+
+systemctl restart postgresql-12		
+sudo systemctl start httpd
+sudo systemctl enable httpd
+		
+sudo yum install httpd		
+		
+mkdir /var/www/html/pg_reports/
+pgbadger -I -q /var/lib/pgsql/12/data/log/postgresql-* -O /var/www/html/pg_reports/
+
+
+[root@localhost]# crontab -l
+0 11 * * * pgbadger -I -q /var/lib/pgsql/12/data/log/postgresql-* -O /var/www/html/pg_reports/

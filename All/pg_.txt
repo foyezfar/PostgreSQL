@@ -1,0 +1,17 @@
+yum install postgresql10-contrib
+
+CREATE EXTENSION pg_stat_statements;
+
+dont forget to activate extensions in postgresql.conf
+
+
+shared_preload_libraries = 'pg_stat_statements'
+pg_stat_statements.track = all
+
+
+$ pgbench -i bench
+$ pgbench -c10 -t300 bench
+$ \x
+SELECT query, calls, total_time, rows, 100.0 * shared_blks_hit /
+               nullif(shared_blks_hit + shared_blks_read, 0) AS hit_percent
+          FROM pg_stat_statements ORDER BY total_time DESC LIMIT 5;
